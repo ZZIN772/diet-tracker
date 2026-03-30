@@ -1,7 +1,7 @@
 {
   "name": "나의 다이어트 루틴",
   "short_name": "DietTracker",
-  "start_url": "diet_tracker_full.html",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#f7e9f5",
