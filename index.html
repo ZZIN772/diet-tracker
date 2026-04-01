@@ -1,23 +1,16 @@
+<!DOCTYPE html>
+<html lang="ko">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <!-- PWA manifest -->
   <link rel="manifest" href="manifest.json">
-
-  <!-- iOS 홈 화면 지원 -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <link rel="apple-touch-icon" href="icon-192.png">
-
-  <!-- 테마 색상 -->
   <meta name="theme-color" content="#f7e9f2">
+  <title>나의 다이어트 루틴</title>
 </head>
 <body>
-
-<!-- 여기에 네 앱 내용이 들어감 -->
-
-<!-- Service Worker 등록 (body 끝부분에만 존재해야 함) -->
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
@@ -28,25 +21,16 @@
   }
 </script>
 
-</body>
-</html>
 <style>
 :root {
-  /* 텍스트 */
-  --color-text-primary: #4A4A4A;      /* 부드러운 진회색 */
-  --color-text-secondary: #7D7D7D;    /* 연한 회색 */
-  --color-text-tertiary: #B5B5B5;     /* 더 연한 회색 */
-
-  /* 배경 */
-  --color-background-primary: #FFFFFF; /* 기본 흰색 */
-  --color-background-secondary: #F7F4FA; /* 연보라 파스텔 */
-
-  /* 테두리 */
-  --color-border-primary: #C8B8E8;     /* 연보라 */
-  --color-border-secondary: #E3DDF2;   /* 더 연한 보라 */
-  --color-border-tertiary: #F0ECF8;    /* 거의 흰색에 가까운 보라 */
-
-  /* 폰트 */
+  --color-text-primary: #4A4A4A;
+  --color-text-secondary: #7D7D7D;
+  --color-text-tertiary: #B5B5B5;
+  --color-background-primary: #FFFFFF;
+  --color-background-secondary: #F7F4FA;
+  --color-border-primary: #C8B8E8;
+  --color-border-secondary: #E3DDF2;
+  --color-border-tertiary: #F0ECF8;
   --font-sans: "Noto Sans KR", sans-serif;
 }
 
@@ -145,8 +129,13 @@
 .body-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .body-field label { font-size: 12px; color: var(--color-text-secondary); display: block; margin-bottom: 5px; }
 .body-field-row { display: flex; align-items: center; gap: 6px; }
+.dot-btn { width: 32px; height: 32px; flex-shrink: 0; border: 1.5px solid var(--color-border-primary); border-radius: 8px; background: var(--color-background-secondary); font-size: 18px; font-weight: 500; color: var(--color-text-primary); cursor: pointer; display: flex; align-items: center; justify-content: center; line-height: 1; }
+.dot-btn:active { background: var(--color-border-secondary); }
 .body-field input { border: 0.5px solid var(--color-border-tertiary); border-radius: 8px; padding: 7px 10px; font-size: 15px; font-family: var(--font-sans); color: var(--color-text-primary); background: var(--color-background-primary); width: 100%; }
 .body-field input:focus { outline: none; border-color: #1D9E75; }
+.body-field input::-webkit-inner-spin-button,
+.body-field input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.body-field input[type=number] { -moz-appearance: textfield; }
 .body-unit { font-size: 13px; color: var(--color-text-secondary); white-space: nowrap; }
 .body-diff { font-size: 12px; font-weight: 500; margin-top: 4px; }
 .diff-down { color: #1D9E75; }
@@ -244,7 +233,7 @@
         <div class="body-field">
           <label>몸무게</label>
           <div class="body-field-row">
-            <input type="number" id="inp-weight" step="0.1" placeholder="00.0" oninput="saveBody()">
+            <input type="text" inputmode="numeric" id="inp-weight" placeholder="2216 → 22.16" oninput="autoDecimal(this);saveBody()">
             <span class="body-unit">kg</span>
           </div>
           <div class="body-diff" id="diff-weight"></div>
@@ -252,7 +241,7 @@
         <div class="body-field">
           <label>체지방률</label>
           <div class="body-field-row">
-            <input type="number" id="inp-fat" step="0.1" placeholder="00.0" oninput="saveBody()">
+            <input type="text" inputmode="numeric" id="inp-fat" placeholder="2216 → 22.16" oninput="autoDecimal(this);saveBody()">
             <span class="body-unit">%</span>
           </div>
           <div class="body-diff" id="diff-fat"></div>
@@ -336,52 +325,6 @@ const EXERCISES = [
   { id:2, label:'강아지 산책 (2~3회)', wd:false, badge:null },
   { id:3, label:'계단 오르기 9층', wd:true, badge:'wd' },
 ];
-const MUST_ITEMS = [
-  { id:0, label:'유산균' },
-  { id:1, label:'그릭요거트 + 올리브유' },
-  { id:2, label:'비타민 C' },
-  { id:3, label:'그린스무디' },
-  { id:4, label:'유산소 운동 (20분 이상) 후 단백질 섭취' },
-];
-const MUST_ITEMS_REAL = [
-  { id:0, label:'유산균' },
-  { id:1, label:'그릭요거트 + 올리브유' },
-  { id:2, label:'비타민 C' },
-  { id:3, label:'그린스무디' },
-  { id:4, label:'오메가3 / 기타 영양제' },
-];
-
-const MUST = [
-  { id:0, label:'유산균' },
-  { id:1, label:'그릭요거트 + 올리브유' },
-  { id:2, label:'비타민 C' },
-  { id:3, label:'그린스무디' },
-  { id:4, label:'오메가3 / 기타 영양제' },
-];
-
-const MUST_LIST = [
-  { id:0, label:'유산균' },
-  { id:1, label:'그릭요거트 + 올리브유' },
-  { id:2, label:'비타민 C' },
-  { id:3, label:'그린스무디' },
-  { id:4, label:'오메가3 / 영양제' },
-];
-
-const MUSTS = [
-  { id:0, label:'유산균' },
-  { id:1, label:'그릭요거트 + 올리브유' },
-  { id:2, label:'비타민 C' },
-  { id:3, label:'그린스무디' },
-  { id:4, label:'오메가3 / 영양제' },
-];
-
-const MUST_FINAL = [
-  { id:0, label:'유산균' },
-  { id:1, label:'그릭요거트 + 올리브유' },
-  { id:2, label:'비타민 C' },
-  { id:3, label:'그린스무디' },
-  { id:4, label:'오메가3' },
-];
 
 const MORNING_MUST = [
   { id:'m0', label:'유산균' },
@@ -404,10 +347,7 @@ function getDd(d){ return ls(dkey(d))||{ex:[],water:0,warm:false,squat:0,must:[]
 function setDd(d,v){ lss(dkey(d),v); }
 function avail(d){ return EXERCISES.filter(e=>!e.wd||isWD(d)); }
 
-function getTotalMl(dd){
-  const warmMl = dd.warm ? 250 : 0;
-  return warmMl + dd.water * 250;
-}
+function getTotalMl(dd){ return (dd.warm?250:0) + dd.water*250; }
 function getTotalCups(dd){ return (dd.warm?1:0) + dd.water; }
 
 function switchTab(name, btn){
@@ -455,17 +395,13 @@ function renderWaterSummary(){
   const dd=getDd(currentDate);
   const totalMl=getTotalMl(dd);
   const totalCups=getTotalCups(dd);
-  const goalMl=9*250;
-  const pct=Math.min(100, Math.round(totalMl/goalMl*100));
-
+  const pct=Math.min(100,Math.round(totalMl/(9*250)*100));
   document.getElementById('water-ml').textContent=totalMl.toLocaleString();
   document.getElementById('water-goal-txt').textContent='/ 2,250ml';
   document.getElementById('water-cups-txt').textContent=`${totalCups} / 9잔`;
   document.getElementById('water-full-fill').style.width=pct+'%';
-
   const wc=document.getElementById('warm-cup');
   wc.className='warm-cup'+(dd.warm?' on':'');
-
   const row=document.getElementById('water-cups-row'); row.innerHTML='';
   for(let i=0;i<8;i++){
     const c=document.createElement('div');
@@ -539,15 +475,16 @@ function renderBody(){
   const dd=getDd(currentDate);
   document.getElementById('inp-weight').value=dd.weight!=null?dd.weight:'';
   document.getElementById('inp-fat').value=dd.fat!=null?dd.fat:'';
-  document.getElementById('s-weight').textContent=dd.weight!=null?dd.weight.toFixed(1):'-';
+  // ★ 소수점 둘째 자리까지 표시
+  document.getElementById('s-weight').textContent=dd.weight!=null?dd.weight.toFixed(2):'-';
   const prev=new Date(currentDate); prev.setDate(prev.getDate()-1);
   const pd=getDd(prev);
   function diffHtml(cur,pre,unit){
     if(cur==null||pre==null) return '';
     const d=(cur-pre);
-    if(Math.abs(d)<0.01) return `<span class="body-diff diff-zero">전일 동일</span>`;
+    if(Math.abs(d)<0.005) return `<span class="body-diff diff-zero">전일 동일</span>`;
     const sign=d>0?'+':''; const cls=d<0?'diff-down':'diff-up';
-    return `<span class="body-diff ${cls}">${sign}${d.toFixed(1)}${unit} (전일 대비)</span>`;
+    return `<span class="body-diff ${cls}">${sign}${d.toFixed(2)}${unit} (전일 대비)</span>`;
   }
   document.getElementById('diff-weight').innerHTML=diffHtml(dd.weight,pd.weight,'kg');
   document.getElementById('diff-fat').innerHTML=diffHtml(dd.fat,pd.fat,'%');
@@ -570,12 +507,52 @@ function renderStats(){
   document.getElementById('s-pct').innerHTML=`${Math.round(done/tot*100)}<span style="font-size:12px;font-weight:400">%</span>`;
 }
 
+function autoDecimal(el){
+  const raw = el.value.replace(/\D/g, '').slice(0, 5);
+  if(raw.length === 0){ el.value = ''; return; }
+  if(raw.length <= 2){
+    el.value = '0.' + raw.padStart(2, '0');
+  } else {
+    el.value = raw.slice(0, raw.length - 2) + '.' + raw.slice(-2);
+  }
+}
+
+function dotPress(e, id){
+  e.preventDefault();
+  const el = document.getElementById(id);
+  if(el.value.includes('.')) return;
+  const pos = el.selectionStart;
+  el.value = el.value.slice(0, pos) + '.' + el.value.slice(pos);
+  el.setSelectionRange(pos+1, pos+1);
+  el.focus();
+  filterDecimal(el);
+  saveBody();
+}
+
+function insertDot(id){
+  const el = document.getElementById(id);
+  if(el.value.includes('.')) return;
+  el.value = el.value + '.';
+  el.focus();
+  filterDecimal(el);
+  saveBody();
+}
+
+function filterDecimal(el){
+  let v = el.value.replace(/[^\d.]/g, '');
+  const parts = v.split('.');
+  if(parts.length > 2) v = parts[0] + '.' + parts.slice(1).join('');
+  if(parts[1] && parts[1].length > 2) v = parts[0] + '.' + parts[1].slice(0,2);
+  el.value = v;
+}
+
 function saveBody(){
   const d=getDd(currentDate);
   const w=parseFloat(document.getElementById('inp-weight').value);
   const f=parseFloat(document.getElementById('inp-fat').value);
-  d.weight=isNaN(w)?null:Math.round(w*10)/10;
-  d.fat=isNaN(f)?null:Math.round(f*10)/10;
+  // ★ 소수점 둘째 자리까지 저장 (Math.round(*100)/100)
+  d.weight=isNaN(w)?null:Math.round(w*100)/100;
+  d.fat=isNaN(f)?null:Math.round(f*100)/100;
   setDd(currentDate,d); renderBody(); renderStats();
 }
 function saveMeal(){
@@ -604,11 +581,11 @@ function renderGraphs(){
       { label:'체지방(%)', data:fats, borderColor:'#7F77DD', backgroundColor:'rgba(127,119,221,0.08)', tension:0.35, pointRadius:4, pointBackgroundColor:'#7F77DD', spanGaps:true, yAxisID:'y2' }
     ]},
     options:{ responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:ctx=>ctx.dataset.label+': '+(ctx.parsed.y!=null?ctx.parsed.y.toFixed(1):'-') } } },
+      plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:ctx=>ctx.dataset.label+': '+(ctx.parsed.y!=null?ctx.parsed.y.toFixed(2):'-') } } },
       scales:{
         x:{ ticks:{font:{size:11}, color:'#888780', maxRotation:45, autoSkip:true}, grid:{color:'rgba(0,0,0,0.04)'} },
-        y:{ position:'left', ticks:{font:{size:11}, color:'#1D9E75', callback:v=>v.toFixed(1)+'kg'}, grid:{color:'rgba(0,0,0,0.04)'} },
-        y2:{ position:'right', ticks:{font:{size:11}, color:'#7F77DD', callback:v=>v.toFixed(1)+'%'}, grid:{display:false} }
+        y:{ position:'left', ticks:{font:{size:11}, color:'#1D9E75', callback:v=>v.toFixed(2)+'kg'}, grid:{color:'rgba(0,0,0,0.04)'} },
+        y2:{ position:'right', ticks:{font:{size:11}, color:'#7F77DD', callback:v=>v.toFixed(2)+'%'}, grid:{display:false} }
       }
     }
   });
@@ -640,10 +617,10 @@ function renderGraphs(){
 function renderSummary(days){
   const weights=days.map(d=>getDd(d).weight).filter(v=>v!=null);
   const exRates=days.map(d=>{ const dd=getDd(d), av=avail(d); return av.length===0?null:Math.round(dd.ex.filter(id=>av.some(e=>e.id===id)).length/av.length*100); }).filter(v=>v!=null);
-  function diffStr(arr){ if(arr.length<2) return '-'; const d=arr[arr.length-1]-arr[0]; return (d>0?'+':'')+d.toFixed(1); }
+  function diffStr(arr){ if(arr.length<2) return '-'; const d=arr[arr.length-1]-arr[0]; return (d>0?'+':'')+d.toFixed(2); }
   const cards=[
-    { label:'시작 몸무게', val:weights.length?weights[0].toFixed(1)+'kg':'-' },
-    { label:'현재 몸무게', val:weights.length?weights[weights.length-1].toFixed(1)+'kg':'-' },
+    { label:'시작 몸무게', val:weights.length?weights[0].toFixed(2)+'kg':'-' },
+    { label:'현재 몸무게', val:weights.length?weights[weights.length-1].toFixed(2)+'kg':'-' },
     { label:'체중 변화', val:diffStr(weights)+(weights.length>1?'kg':'') },
     { label:'평균 운동 달성률', val:exRates.length?Math.round(exRates.reduce((a,b)=>a+b,0)/exRates.length)+'%':'-' },
   ];
