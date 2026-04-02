@@ -150,6 +150,31 @@
 .range-btns { display:flex; gap:4px; }
 .range-btn { padding:3px 10px; font-size:12px; border-radius:6px; border:0.5px solid var(--color-border-secondary); background:transparent; cursor:pointer; color:var(--color-text-secondary); font-family:var(--font-sans); }
 .range-btn.active { background:#E1F5EE; border-color:#1D9E75; color:#0F6E56; }
+
+/* ── 시작일 설정 ── */
+.start-date-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding: 10px 12px;
+  background: var(--color-background-secondary);
+  border-radius: 8px;
+  flex-wrap: wrap;
+}
+.start-date-row label { font-size: 12px; color: var(--color-text-secondary); white-space: nowrap; }
+.start-date-row input[type="date"] {
+  border: 0.5px solid var(--color-border-secondary);
+  border-radius: 8px;
+  padding: 5px 10px;
+  font-size: 13px;
+  font-family: var(--font-sans);
+  color: var(--color-text-primary);
+  background: var(--color-background-primary);
+  cursor: pointer;
+}
+.start-date-row input[type="date"]:focus { outline: none; border-color: #1D9E75; }
+.start-date-hint { font-size: 11px; color: var(--color-text-tertiary); }
 </style>
 
 <div class="wrap">
@@ -286,6 +311,18 @@
   </div>
 
   <div id="page-graph" class="page">
+    <!-- ── 시작일 설정 ── -->
+    <div class="section">
+      <div class="sec-hd" style="margin-bottom:0">
+        <div class="sec-title">그래프 시작일</div>
+      </div>
+      <div class="start-date-row" style="margin-top:10px;margin-bottom:0">
+        <label>시작일</label>
+        <input type="date" id="graph-start-date" onchange="onStartDateChange()">
+        <span class="start-date-hint">지정한 날부터 그래프에 표시됩니다</span>
+      </div>
+    </div>
+
     <div class="section">
       <div class="chart-hd">
         <div>
@@ -298,6 +335,7 @@
         <div class="range-btns">
           <button class="range-btn active" onclick="setRange('week',this)">1주</button>
           <button class="range-btn" onclick="setRange('month',this)">1개월</button>
+          <button class="range-btn" id="range-btn-start" onclick="setRange('start',this)" style="display:none">시작일~</button>
         </div>
       </div>
       <div style="position:relative;width:100%;height:260px;margin-top:4px;">
@@ -319,11 +357,14 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
+// ── 운동 목록: 강아지 산책을 3개로 분리 ──
 const EXERCISES = [
   { id:0, label:'아침스트레칭 및 제자리뛰기', wd:false, badge:null },
   { id:1, label:'근력 운동 + 요가 포함 (총 1시간)', wd:false, badge:'mix' },
-  { id:2, label:'강아지 산책 (2~3회)', wd:false, badge:null },
-  { id:3, label:'계단 오르기 9층', wd:true, badge:'wd' },
+  { id:2, label:'강아지 산책 1', wd:false, badge:null },
+  { id:3, label:'강아지 산책 2', wd:false, badge:null },
+  { id:4, label:'강아지 산책 3', wd:false, badge:null },
+  { id:5, label:'계단 오르기 9층', wd:true, badge:'wd' },
 ];
 
 const MORNING_MUST = [
@@ -338,7 +379,9 @@ const DAYS = ['일','월','화','수','목','금','토'];
 let currentDate = new Date(); currentDate.setHours(0,0,0,0);
 let chartRange = 'week';
 let bodyChartInst = null, exChartInst = null;
+let graphStartDate = null; // 사용자 지정 시작일
 
+// ── localStorage 헬퍼 ──
 function isWD(d){ const w=d.getDay(); return w>=1&&w<=5; }
 function dkey(d){ return d.toISOString().slice(0,10); }
 function ls(k){ try{return JSON.parse(localStorage.getItem('diet4_'+k)||'null');}catch{return null;} }
@@ -349,6 +392,43 @@ function avail(d){ return EXERCISES.filter(e=>!e.wd||isWD(d)); }
 
 function getTotalMl(dd){ return (dd.warm?250:0) + dd.water*250; }
 function getTotalCups(dd){ return (dd.warm?1:0) + dd.water; }
+
+// ── 시작일 관련 ──
+function loadStartDate(){
+  const saved = localStorage.getItem('diet4_graphStartDate');
+  if(saved){
+    graphStartDate = new Date(saved);
+    graphStartDate.setHours(0,0,0,0);
+    document.getElementById('graph-start-date').value = saved;
+    document.getElementById('range-btn-start').style.display = '';
+  }
+}
+function onStartDateChange(){
+  const val = document.getElementById('graph-start-date').value;
+  if(!val){ graphStartDate=null; localStorage.removeItem('diet4_graphStartDate'); document.getElementById('range-btn-start').style.display='none'; }
+  else {
+    graphStartDate = new Date(val); graphStartDate.setHours(0,0,0,0);
+    localStorage.setItem('diet4_graphStartDate', val);
+    document.getElementById('range-btn-start').style.display='';
+    // 시작일 지정 시 자동으로 "시작일~" 범위로 전환
+    document.querySelectorAll('.range-btn').forEach(b=>b.classList.remove('active'));
+    document.getElementById('range-btn-start').classList.add('active');
+    chartRange = 'start';
+  }
+  renderGraphs();
+}
+
+// ── 그래프용 날짜 배열 생성 ──
+function getGraphDays(){
+  if(chartRange==='start' && graphStartDate){
+    const days=[];
+    const end=new Date(currentDate);
+    const d=new Date(graphStartDate);
+    while(d<=end){ days.push(new Date(d)); d.setDate(d.getDate()+1); }
+    return days;
+  }
+  return chartRange==='week' ? getDaysBack(7) : getDaysBack(30);
+}
 
 function switchTab(name, btn){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
@@ -475,7 +555,6 @@ function renderBody(){
   const dd=getDd(currentDate);
   document.getElementById('inp-weight').value=dd.weight!=null?dd.weight:'';
   document.getElementById('inp-fat').value=dd.fat!=null?dd.fat:'';
-  // ★ 소수점 둘째 자리까지 표시
   document.getElementById('s-weight').textContent=dd.weight!=null?dd.weight.toFixed(2):'-';
   const prev=new Date(currentDate); prev.setDate(prev.getDate()-1);
   const pd=getDd(prev);
@@ -517,27 +596,6 @@ function autoDecimal(el){
   }
 }
 
-function dotPress(e, id){
-  e.preventDefault();
-  const el = document.getElementById(id);
-  if(el.value.includes('.')) return;
-  const pos = el.selectionStart;
-  el.value = el.value.slice(0, pos) + '.' + el.value.slice(pos);
-  el.setSelectionRange(pos+1, pos+1);
-  el.focus();
-  filterDecimal(el);
-  saveBody();
-}
-
-function insertDot(id){
-  const el = document.getElementById(id);
-  if(el.value.includes('.')) return;
-  el.value = el.value + '.';
-  el.focus();
-  filterDecimal(el);
-  saveBody();
-}
-
 function filterDecimal(el){
   let v = el.value.replace(/[^\d.]/g, '');
   const parts = v.split('.');
@@ -550,7 +608,6 @@ function saveBody(){
   const d=getDd(currentDate);
   const w=parseFloat(document.getElementById('inp-weight').value);
   const f=parseFloat(document.getElementById('inp-fat').value);
-  // ★ 소수점 둘째 자리까지 저장 (Math.round(*100)/100)
   d.weight=isNaN(w)?null:Math.round(w*100)/100;
   d.fat=isNaN(f)?null:Math.round(f*100)/100;
   setDd(currentDate,d); renderBody(); renderStats();
@@ -569,7 +626,7 @@ function getDaysBack(n){
 }
 
 function renderGraphs(){
-  const days=chartRange==='week'?getDaysBack(7):getDaysBack(30);
+  const days = getGraphDays();
   const labels=days.map(d=>`${d.getMonth()+1}/${d.getDate()}`);
   const weights=days.map(d=>{ const dd=getDd(d); return dd.weight!=null?dd.weight:null; });
   const fats=days.map(d=>{ const dd=getDd(d); return dd.fat!=null?dd.fat:null; });
@@ -590,8 +647,16 @@ function renderGraphs(){
     }
   });
 
+  // 운동 달성률 차트 (주간/월간/시작일 모드 공통)
   const exLabels=[], exData=[];
-  if(chartRange==='week'){
+  if(chartRange==='start' && graphStartDate){
+    // 시작일 ~ 현재: 날짜별로 표시
+    days.forEach(d=>{
+      const dd=getDd(d), av=avail(d);
+      exLabels.push(`${d.getMonth()+1}/${d.getDate()}`);
+      exData.push(av.length===0?0:Math.round(dd.ex.filter(id=>av.some(e=>e.id===id)).length/av.length*100));
+    });
+  } else if(chartRange==='week'){
     const ws=new Date(currentDate); ws.setDate(currentDate.getDate()-currentDate.getDay());
     DAYS.forEach((_,i)=>{ const d=new Date(ws); d.setDate(ws.getDate()+i); const dd=getDd(d), av=avail(d); exLabels.push(DAYS[i]); exData.push(av.length===0?0:Math.round(dd.ex.filter(id=>av.some(e=>e.id===id)).length/av.length*100)); });
   } else {
@@ -638,6 +703,8 @@ function renderSummary(days){
 function renderAll(){
   renderDateLabel(); renderWeekStrip(); renderWaterSummary(); renderMust(); renderBody(); renderExercises(); renderSquat(); renderMeals(); renderNote(); renderStats();
 }
+
+loadStartDate();
 renderAll();
 </script>
 </body>
