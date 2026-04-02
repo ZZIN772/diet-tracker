@@ -1,8 +1,8 @@
-const CACHE_NAME = 'diet-tracker-v1';
+const CACHE_NAME = 'diet-routine-v3'; // ← 보상탭 추가 버전
+
 const ASSETS = [
   './',
   './index.html',
-  './manifest.json',
   'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js'
 ];
 
