@@ -289,8 +289,8 @@
     <div class="section">
       <div class="sec-hd"><div class="sec-title"><div class="sec-icon i-body">⚖</div>몸무게 · 체지방</div></div>
       <div class="body-inputs">
-        <div class="body-field"><label>몸무게</label><div class="body-field-row"><input type="text" inputmode="numeric" id="inp-weight" placeholder="2216 → 22.16" oninput="autoDecimal(this);saveBody()"><span class="body-unit">kg</span></div><div class="body-diff" id="diff-weight"></div></div>
-        <div class="body-field"><label>체지방률</label><div class="body-field-row"><input type="text" inputmode="numeric" id="inp-fat" placeholder="2216 → 22.16" oninput="autoDecimal(this);saveBody()"><span class="body-unit">%</span></div><div class="body-diff" id="diff-fat"></div></div>
+        <div class="body-field"><label>몸무게</label><div class="body-field-row"><input type="text" inputmode="numeric" id="inp-weight" placeholder="2017 → 20.17" oninput="autoDecimal(this);saveBody()"><span class="body-unit">kg</span></div><div class="body-diff" id="diff-weight"></div></div>
+        <div class="body-field"><label>체지방률</label><div class="body-field-row"><input type="text" inputmode="numeric" id="inp-fat" placeholder="2017 → 20.17" oninput="autoDecimal(this);saveBody()"><span class="body-unit">%</span></div><div class="body-diff" id="diff-fat"></div></div>
       </div>
     </div>
 
@@ -603,10 +603,15 @@ function renderSquat(){
   document.getElementById('squat-prog').textContent=`${total} / 100개`;
   document.getElementById('s-squat').innerHTML=`${total}<span style="font-size:12px;font-weight:400">/100</span>`;
 }
+function fmtBodyVal(v){
+  if(v==null) return '';
+  const s=String(Math.round(v*100)).padStart(3,'0');
+  return s.slice(0,s.length-2)+'.'+s.slice(-2);
+}
 function renderBody(){
   const dd=getDd(currentDate);
-  document.getElementById('inp-weight').value=dd.weight!=null?dd.weight:'';
-  document.getElementById('inp-fat').value=dd.fat!=null?dd.fat:'';
+  document.getElementById('inp-weight').value=dd.weight!=null?fmtBodyVal(dd.weight):'';
+  document.getElementById('inp-fat').value=dd.fat!=null?fmtBodyVal(dd.fat):'';
   document.getElementById('s-weight').textContent=dd.weight!=null?dd.weight.toFixed(2):'-';
   const prev=new Date(currentDate);prev.setDate(prev.getDate()-1);const pd=getDd(prev);
   function diffHtml(cur,pre,unit){
@@ -721,9 +726,10 @@ function saveNewReward(){
 
 /* ── 입력 / 저장 ── */
 function autoDecimal(el){
-  const raw=el.value.replace(/\D/g,'').slice(0,5);
+  const raw=el.value.replace(/[^0-9]/g,'').slice(0,5);
   if(!raw.length){el.value='';return;}
-  el.value=raw.length<=2?'0.'+raw.padStart(2,'0'):raw.slice(0,raw.length-2)+'.'+raw.slice(-2);
+  const padded=raw.padStart(3,'0');
+  el.value=padded.slice(0,padded.length-2)+'.'+padded.slice(-2);
 }
 function saveBody(){
   const d=getDd(currentDate);
